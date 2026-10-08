@@ -10,7 +10,7 @@ const SIZE = 160;
 
 await rm(site, { recursive: true, force: true });
 await mkdir(new URL("img/", site), { recursive: true });
-for (const f of ["index.html", "style.css", "app.js", "data"]) {
+for (const f of ["index.html", "404.html", "style.css", "app.js", "data"]) {
   await cp(new URL(f, root), new URL(f, site), { recursive: true });
 }
 await writeFile(new URL(".nojekyll", site), "");
