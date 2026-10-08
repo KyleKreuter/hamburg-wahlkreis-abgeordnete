@@ -14,7 +14,7 @@ Reine statische Seite ohne Build-Schritt:
 | --- | --- |
 | `index.html`, `style.css`, `app.js` | Oberfläche (Leaflet-Karte, Adresssuche, Abgeordnetenliste) |
 | `data/wahlkreise.geojson` | Wahlkreisgrenzen (WGS84, vereinfacht) |
-| `data/abgeordnete.json` | Abgeordnete inkl. Fraktion, Wahlkreis, Kontakt |
+| `data/abgeordnete.json` | Abgeordnete inkl. Fraktion, Wahlkreis, Kontakt; für Listen-Abgeordnete der Wahlkreis ihrer Kandidatur 2025 (`listWk`) |
 | `scripts/update-data.mjs` | Lädt die Abgeordnetendaten neu von der Bürgerschaft |
 | `scripts/build.mjs` | Baut die Seite nach `_site/` inkl. kleiner WebP-Fotos |
 
@@ -48,6 +48,7 @@ schon automatisch eingestellt hat).
 ## Quellen & Lizenzen
 
 - Abgeordnetendaten: [Hamburgische Bürgerschaft](https://www.hamburgische-buergerschaft.de/ueber-uns/interaktive-wahlkreiskarte)
+- Wahlkreiskandidaturen der Listen-Abgeordneten: [abgeordnetenwatch.de](https://www.abgeordnetenwatch.de/hamburg) (CC0 1.0)
 - Wahlkreisgrenzen: © Statistisches Amt für Hamburg und Schleswig-Holstein, 2025 –
   [Geometrien der Wahlkreise zur Bürgerschaftswahl 2025](https://suche.transparenz.hamburg.de/dataset/geometrien-der-wahlkreise-zur-burgerschaftswahl-2025)
   (Datenlizenz Deutschland – Namensnennung – 2.0), von EPSG:25832 nach WGS84 umprojiziert und vereinfacht

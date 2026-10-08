@@ -88,6 +88,15 @@
 
     const badge = node.querySelector(".badge");
     badge.textContent = f.label;
+    if (!m.wk) {
+      node.querySelector(".member__name").append(" ", el("span", {
+        className: "tag",
+        textContent: "Landesliste",
+        title: m.listWk
+          ? `Über die Landesliste gewählt, hat 2025 im Wahlkreis ${m.listWk} kandidiert`
+          : "Über die Landesliste gewählt",
+      }));
+    }
 
     const links = node.querySelector(".member__links");
     if (m.email) links.append(el("a", { href: `mailto:${m.email}`, textContent: "E-Mail" }));
@@ -100,9 +109,12 @@
     return el("div", { className: "member__img fallback", textContent: initials(m.name), ariaHidden: "true" });
   }
 
-  function dots(members) {
-    return el("span", { className: "dots" }, ...members.map((m) => {
-      const s = el("span", { className: "dot", title: `${m.name} (${faction(m.faction).label})` });
+  function dots(members, listMembers = []) {
+    return el("span", { className: "dots" }, ...[...members, ...listMembers].map((m) => {
+      const s = el("span", {
+        className: m.wk ? "dot" : "dot dot--ring",
+        title: `${m.name} (${faction(m.faction).label}${m.wk ? "" : ", Landesliste"})`,
+      });
       s.style.setProperty("--c", faction(m.faction).color);
       return s;
     }));
@@ -114,7 +126,7 @@
       const btn = el("button", { type: "button", className: "wk-item" },
         el("span", { className: "wk-num", textContent: d.nr }),
         el("span", { className: "wk-item__name", textContent: d.name }),
-        dots(d.members));
+        dots(d.members, d.listMembers));
       btn.addEventListener("click", () => {
         if (state.marker) { state.marker.remove(); state.marker = null; }
         selectDistrict(d.nr, { fly: true });
@@ -127,6 +139,12 @@
     $("#list-members").replaceChildren(...listMembers.map((m) => {
       const li = el("li", {}, el("span", { className: "dot" }),
         el("a", { href: m.profile, target: "_blank", rel: "noopener", textContent: m.name }));
+      if (m.listWk) {
+        const wk = el("button", { type: "button", className: "tag tag--wk", textContent: `WK ${m.listWk}`,
+          title: `Hat 2025 im Wahlkreis ${m.listWk} (${state.districts.get(m.listWk)?.name ?? ""}) kandidiert` });
+        wk.addEventListener("click", () => selectDistrict(m.listWk, { fly: true }));
+        li.append(wk);
+      }
       li.firstChild.style.setProperty("--c", faction(m.faction).color);
       li.firstChild.title = faction(m.faction).label;
       return li;
@@ -151,6 +169,13 @@
           el("p", { textContent: sub }))),
       el("ul", { className: "members" }, ...d.members.map(memberCard)),
     );
+    if (d.listMembers.length) {
+      result.append(
+        el("h3", { className: "section-title", textContent: "Über die Landesliste" }),
+        el("p", { className: "hint", textContent: "Abgeordnete mit Listenmandat, die 2025 in diesem Wahlkreis kandidiert haben." }),
+        el("ul", { className: "members" }, ...d.listMembers.map(memberCard)),
+      );
+    }
     result.hidden = false;
     $("#overview").hidden = true;
   }
@@ -316,20 +341,26 @@
     state.members = data.members;
     $("#data-date").textContent = new Date(data.fetchedAt).toLocaleDateString("de-DE");
 
-    const byWk = new Map();
-    for (const m of data.members) if (m.wk) (byWk.get(m.wk) || byWk.set(m.wk, []).get(m.wk)).push(m);
-    const order = Object.keys(FACTIONS);
-    for (const list of byWk.values()) list.sort((a, b) => order.indexOf(a.faction) - order.indexOf(b.faction) || a.lastname.localeCompare(b.lastname, "de"));
+    const groupBy = (key) => {
+      const groups = new Map();
+      for (const m of data.members) if (m[key]) (groups.get(m[key]) || groups.set(m[key], []).get(m[key])).push(m);
+      const order = Object.keys(FACTIONS);
+      for (const list of groups.values()) list.sort((a, b) => order.indexOf(a.faction) - order.indexOf(b.faction) || a.lastname.localeCompare(b.lastname, "de"));
+      return groups;
+    };
+    const byWk = groupBy("wk");
+    const byListWk = groupBy("listWk");
 
     geo.features.sort((a, b) => a.properties.nr - b.properties.nr);
     for (const feature of geo.features) {
       const { nr, name, lx, ly } = feature.properties;
       const members = byWk.get(nr) || [];
+      const listMembers = byListWk.get(nr) || [];
       const layer = L.geoJSON(feature, { style: baseStyle }).addTo(map);
-      const d = { nr, name, feature, layer, members };
+      const d = { nr, name, feature, layer, members, listMembers };
       state.districts.set(nr, d);
 
-      layer.bindTooltip(`<strong>${nr} · ${name}</strong><br><span>${members.length} Abgeordnete</span>`, { className: "wk-tip", sticky: true, direction: "top" });
+      layer.bindTooltip(`<strong>${nr} · ${name}</strong><br><span>${members.length} Abgeordnete${listMembers.length ? ` · +${listMembers.length} Landesliste` : ""}</span>`, { className: "wk-tip", sticky: true, direction: "top" });
       layer.on("mouseover", () => state.selected !== nr && layer.setStyle(hoverStyle));
       layer.on("mouseout", () => restyle());
       layer.on("click", (e) => locatePoint(e.latlng.lat, e.latlng.lng, null));
