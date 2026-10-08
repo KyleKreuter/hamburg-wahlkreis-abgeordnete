@@ -16,6 +16,7 @@ Reine statische Seite ohne Build-Schritt:
 | `data/wahlkreise.geojson` | Wahlkreisgrenzen (WGS84, vereinfacht) |
 | `data/abgeordnete.json` | Abgeordnete inkl. Fraktion, Wahlkreis, Kontakt |
 | `scripts/update-data.mjs` | Lädt die Abgeordnetendaten neu von der Bürgerschaft |
+| `scripts/build.mjs` | Baut die Seite nach `_site/` inkl. kleiner WebP-Fotos |
 
 Die Wahlkreiszuordnung einer Adresse passiert komplett im Browser (Punkt-in-Polygon).
 Für die Umwandlung von Adresse in Koordinaten wird [Photon](https://photon.komoot.io) (OpenStreetMap) verwendet.
@@ -30,16 +31,19 @@ python3 -m http.server 8000
 ## Daten aktualisieren
 
 ```sh
-node scripts/update-data.mjs
+npm install
+npm run update-data   # Abgeordnete neu laden
+npm run build         # Seite nach _site/ bauen
 ```
-
-Der GitHub-Actions-Workflow `.github/workflows/pages.yml` macht das bei jedem Deploy und zusätzlich
-wöchentlich automatisch, bevor die Seite auf GitHub Pages veröffentlicht wird.
 
 ## Deployment
 
-In den Repository-Einstellungen unter **Settings → Pages → Build and deployment → Source**
-„**GitHub Actions**“ auswählen. Danach deployt jeder Push auf `main` automatisch.
+Der Workflow `.github/workflows/pages.yml` lädt bei jedem Push auf `main`, wöchentlich und auf Knopfdruck
+die aktuellen Daten, baut die Seite und veröffentlicht sie auf dem Branch `gh-pages`.
+
+Einmalig in den Repository-Einstellungen unter **Settings → Pages → Build and deployment**
+„**Deploy from a branch**“ mit Branch **`gh-pages`** / **`/ (root)`** auswählen (falls GitHub das nicht
+schon automatisch eingestellt hat).
 
 ## Quellen & Lizenzen
 

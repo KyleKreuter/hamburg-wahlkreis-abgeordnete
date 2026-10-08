@@ -9,16 +9,14 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
-  pages: write
-  id-token: write
+  contents: write
 
 concurrency:
   group: pages
   cancel-in-progress: false
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -26,32 +24,26 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: npm
+
+      - run: npm ci
 
       - name: Abgeordnetendaten aktualisieren
         # Schlägt der Abruf fehl, wird der eingecheckte Datenstand verwendet.
         continue-on-error: true
-        run: node scripts/update-data.mjs
+        run: npm run update-data
 
-      - name: Seite zusammenstellen
+      - name: Seite bauen
+        run: npm run build
+
+      - name: Auf gh-pages veröffentlichen
+        env:
+          TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          mkdir -p _site
-          cp -r index.html style.css app.js data _site/
-          touch _site/.nojekyll
-
-      - uses: actions/configure-pages@v5
-        with:
-          enablement: true
-
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: _site
-
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - id: deployment
-        uses: actions/deploy-pages@v4
+          cd _site
+          git init -q -b gh-pages
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -q -m "Deploy ${GITHUB_SHA::7}"
+          git push -f "https://x-access-token:${TOKEN}@github.com/${GITHUB_REPOSITORY}.git" gh-pages

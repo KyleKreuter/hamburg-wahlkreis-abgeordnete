@@ -32,10 +32,12 @@
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>-Mitwirkende',
   }).addTo(map);
 
-  const baseStyle = { color: "#b0002a", weight: 1.5, opacity: 0.8, fillColor: "#b0002a", fillOpacity: 0.07 };
-  const hoverStyle = { weight: 2.5, fillOpacity: 0.16 };
-  const selectedStyle = { color: "#b0002a", weight: 3.5, opacity: 1, fillOpacity: 0.22 };
-  const dimStyle = { ...baseStyle, opacity: 0.45, fillOpacity: 0.03 };
+  const INK = "#111113";
+  const baseStyle = { color: INK, weight: 1.2, opacity: 0.55, fillColor: INK, fillOpacity: 0.02 };
+  const hoverStyle = { weight: 2, opacity: 0.85, fillOpacity: 0.06 };
+  const selectedStyle = { color: INK, weight: 2.5, opacity: 1, fillOpacity: 0.1 };
+  const dimStyle = { ...baseStyle, opacity: 0.3, fillOpacity: 0.01 };
+  const pinIcon = L.divIcon({ className: "", html: '<div class="pin"></div>', iconSize: [18, 18], iconAnchor: [9, 9] });
 
   function restyle() {
     for (const d of state.districts.values()) {
@@ -182,7 +184,7 @@
   function locatePoint(lat, lng, label) {
     const d = districtAt(lat, lng);
     if (state.marker) state.marker.remove();
-    state.marker = L.marker([lat, lng], { title: label || "Gewählter Ort", keyboard: false }).addTo(map);
+    state.marker = L.marker([lat, lng], { icon: pinIcon, title: label || "Gewählter Ort", keyboard: false }).addTo(map);
     if (!d) {
       setStatus("Dieser Ort liegt in keinem Hamburger Bürgerschaftswahlkreis.", true);
       map.flyTo([lat, lng], Math.max(map.getZoom(), 12), { duration: 0.6 });
@@ -327,7 +329,7 @@
       const d = { nr, name, feature, layer, members };
       state.districts.set(nr, d);
 
-      layer.bindTooltip(`<strong>${nr} · ${name}</strong><br>${members.length} Abgeordnete`, { className: "wk-tip", sticky: true, direction: "top" });
+      layer.bindTooltip(`<strong>${nr} · ${name}</strong><br><span>${members.length} Abgeordnete</span>`, { className: "wk-tip", sticky: true, direction: "top" });
       layer.on("mouseover", () => state.selected !== nr && layer.setStyle(hoverStyle));
       layer.on("mouseout", () => restyle());
       layer.on("click", (e) => locatePoint(e.latlng.lat, e.latlng.lng, null));

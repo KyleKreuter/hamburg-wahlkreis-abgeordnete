@@ -1,0 +1,12 @@
+{
+  "name": "hamburg-wahlkreis-abgeordnete",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "update-data": "node scripts/update-data.mjs",
+    "build": "node scripts/build.mjs"
+  },
+  "devDependencies": {
+    "sharp": "^0.34.0"
+  }
+}
