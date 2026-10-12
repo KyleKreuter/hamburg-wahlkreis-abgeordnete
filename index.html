@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Wahlkreiskarte Hamburg</title>
+  <meta name="description" content="Interaktive Karte der 17 Hamburger Bürgerschaftswahlkreise mit ihren Abgeordneten – Adresse eingeben und Wahlkreisabgeordnete finden.">
+  <meta name="theme-color" content="#ffffff">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cpath fill='%23111113' d='M16 2C10 2 5 6.6 5 12.6 5 20.5 16 30 16 30s11-9.5 11-17.4C27 6.6 22 2 16 2z'/%3E%3Ccircle cx='16' cy='12.5' r='4.5' fill='%23fff'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app">
+    <aside class="panel" aria-label="Suche und Abgeordnete">
+      <header class="panel__header">
+        <h1>Wahlkreiskarte Hamburg</h1>
+        <p class="lead">Wer vertritt Ihren Wahlkreis in der Hamburgischen Bürgerschaft?</p>
+
+        <form class="search" role="search" autocomplete="off" id="search-form">
+          <label for="address" class="visually-hidden">Adresse in Hamburg</label>
+          <div class="search__field">
+            <svg class="search__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M10.5 3a7.5 7.5 0 0 1 5.9 12.1l4.8 4.8-1.4 1.4-4.8-4.8A7.5 7.5 0 1 1 10.5 3zm0 2a5.5 5.5 0 1 0 0 11 5.5 5.5 0 0 0 0-11z"/></svg>
+            <input id="address" type="search" placeholder="Adresse eingeben, z. B. Osterstraße 10"
+                   role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="suggestions" enterkeyhint="search">
+            <button type="button" class="icon-btn" id="locate" title="Meinen Standort verwenden" aria-label="Meinen Standort verwenden">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 8a4 4 0 1 1 0 8 4 4 0 0 1 0-8zm1-6v2.06A8 8 0 0 1 19.94 11H22v2h-2.06A8 8 0 0 1 13 19.94V22h-2v-2.06A8 8 0 0 1 4.06 13H2v-2h2.06A8 8 0 0 1 11 4.06V2h2zm-1 4a6 6 0 1 0 0 12 6 6 0 0 0 0-12z"/></svg>
+            </button>
+          </div>
+          <ul id="suggestions" class="suggestions" role="listbox" hidden></ul>
+        </form>
+        <p class="status" id="status" role="status" aria-live="polite"></p>
+      </header>
+
+      <div class="panel__body" id="panel-body">
+        <section id="result" hidden></section>
+
+        <section id="overview">
+          <h2 class="section-title">Alle 17 Wahlkreise</h2>
+          <p class="hint">Adresse suchen, auf die Karte tippen oder einen Wahlkreis wählen.</p>
+          <ol class="wk-list" id="wk-list"></ol>
+          <details class="list-members">
+            <summary>Abgeordnete ohne Wahlkreismandat (Landesliste) <span id="list-count"></span></summary>
+            <p class="hint">„WK“ = Wahlkreis, in dem die Person 2025 zusätzlich kandidiert hat (Quelle: abgeordnetenwatch.de). Wohnorte werden nicht veröffentlicht.</p>
+            <ul class="mini-list" id="list-members"></ul>
+          </details>
+        </section>
+      </div>
+
+      <footer class="panel__footer">
+        Daten: <a href="https://www.hamburgische-buergerschaft.de/ueber-uns/interaktive-wahlkreiskarte" target="_blank" rel="noopener">Hamburgische Bürgerschaft</a>
+        (Stand <span id="data-date">–</span>) ·
+        Wahlkreisgrenzen: © <a href="https://suche.transparenz.hamburg.de/dataset/geometrien-der-wahlkreise-zur-burgerschaftswahl-2025" target="_blank" rel="noopener">Statistikamt Nord</a> 2025 ·
+        Kandidaturen: <a href="https://www.abgeordnetenwatch.de/hamburg" target="_blank" rel="noopener">abgeordnetenwatch.de</a> (CC0) ·
+        Adresssuche: <a href="https://photon.komoot.io" target="_blank" rel="noopener">Photon</a> / OpenStreetMap.
+        Inoffizielles Projekt.
+        <p class="credit">Mit ❤️ gebaut von <a href="https://github.com/KyleKreuter" target="_blank" rel="noopener">Kyle Kreuter</a></p>
+      </footer>
+    </aside>
+
+    <main class="map-wrap">
+      <div id="map" role="application" aria-label="Karte der Hamburger Wahlkreise"></div>
+    </main>
+  </div>
+
+  <template id="member-tpl">
+    <li class="member">
+      <img class="member__img" alt="" loading="lazy" referrerpolicy="no-referrer" width="64" height="64">
+      <div class="member__body">
+        <div class="member__name"><a target="_blank" rel="noopener"></a></div>
+        <span class="badge"></span>
+        <div class="member__links"></div>
+      </div>
+    </li>
+  </template>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script src="app.js" defer></script>
+</body>
+</html>
